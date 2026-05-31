@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Admin Kurir - Andalan</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #ff6b00; --orange-light: #ff9a3c; --orange-pale: #fff3e8; --orange-border: #ffd0a8;
+  --green: #19b62f; --green-pale: #e8fbe8; --green-border: #b8e8b8;
+  --blue: #1976d2; --blue-pale: #e3f2fd;
+  --purple: #9c27b0; --purple-pale: #f3e5f5;
+  --red: #e53935; --red-pale: #ffeaea;
+  --yellow: #ffc800; --yellow-pale: #fffbea;
+  --gray-bg: #f0f2f0; --gray-card: #fff; --gray-input: #f8faf8;
+  --gray-border: #e4ebe4; --gray-text: #888; --dark: #1a2a1a;
+  --radius: 18px; --radius-sm: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Nunito',sans-serif; background:var(--gray-bg); color:var(--dark); min-height:100vh; }
+
+.auth-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; background:linear-gradient(145deg,#ff6b00,#ff9a3c); }
+.auth-card { background:white; border-radius:var(--radius); padding:32px 24px; width:100%; max-width:340px; text-align:center; }
+.auth-icon { font-size:48px; margin-bottom:12px; }
+.auth-title { font-size:22px; font-weight:900; color:var(--dark); margin-bottom:4px; }
+.auth-sub { font-size:13px; color:var(--gray-text); margin-bottom:24px; font-weight:600; }
+.auth-input { width:100%; background:var(--gray-input); border:1.5px solid var(--gray-border); border-radius:var(--radius-sm); padding:14px 16px; font-family:'Nunito',sans-serif; font-size:15px; font-weight:700; color:var(--dark); outline:none; margin-bottom:12px; }
+.auth-input:focus { border-color:var(--orange); }
+.auth-btn { width:100%; background:linear-gradient(135deg,var(--orange),var(--orange-light)); color:white; border:none; border-radius:var(--radius-sm); padding:14px; font-family:'Nunito',sans-serif; font-size:15px; font-weight:800; cursor:pointer; }
+.auth-err { font-size:12px; color:var(--red); margin-bottom:10px; display:none; }
+
+.main-screen { display:none; }
+.header { background:linear-gradient(145deg,#ff6b00,#ff9a3c); padding:18px 18px 24px; position:relative; overflow:hidden; }
+.header::before { content:''; position:absolute; top:-40px; right:-40px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.08); }
+.header-row { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; }
+.header-title { color:white; font-size:18px; font-weight:900; }
+.header-sub { color:rgba(255,255,255,0.75); font-size:11px; font-weight:700; margin-top:2px; }
+.logout-btn { background:rgba(255,255,255,0.2); border:none; border-radius:10px; padding:8px 14px; color:white; font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; cursor:pointer; }
+
+.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:16px 16px 0; }
+.stat-card { background:white; border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:0 2px 8px rgba(255,107,0,0.07); }
+.stat-num { font-size:22px; font-weight:900; }
+.stat-label { font-size:10px; color:var(--gray-text); font-weight:700; margin-top:2px; }
+
+.filter-scroll { display:flex; gap:8px; padding:12px 16px; overflow-x:auto; scrollbar-width:none; }
+.filter-scroll::-webkit-scrollbar { display:none; }
+.filter-btn { flex-shrink:0; background:white; border:1.5px solid var(--gray-border); border-radius:100px; padding:7px 14px; font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; color:var(--gray-text); cursor:pointer; white-space:nowrap; transition:all 0.2s; }
+.filter-btn.active { background:var(--orange); border-color:var(--orange); color:white; }
+
+.orders-wrap { padding:0 16px 100px; }
+.order-card { background:white; border-radius:var(--radius); margin-bottom:12px; box-shadow:0 2px 10px rgba(0,0,0,0.06); overflow:hidden; animation:fadeUp 0.3s ease both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+.order-head { display:flex; align-items:center; gap:10px; padding:14px 16px; cursor:pointer; }
+.order-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.order-info { flex:1; min-width:0; }
+.order-kode { font-size:14px; font-weight:900; color:var(--dark); }
+.order-meta { font-size:11px; color:var(--gray-text); margin-top:2px; }
+.order-badge { padding:5px 12px; border-radius:100px; font-size:11px; font-weight:800; flex-shrink:0; }
+.order-chevron { font-size:18px; color:#ccc; transition:transform 0.2s; flex-shrink:0; }
+.order-chevron.open { transform:rotate(90deg); }
+
+.order-body { display:none; border-top:1px solid var(--gray-border); }
+.order-body.open { display:block; }
+.order-section { padding:14px 16px; border-bottom:1px solid #f5f5f5; }
+.order-section:last-child { border-bottom:none; }
+.info-row { display:flex; gap:8px; margin-bottom:8px; font-size:13px; }
+.info-row:last-child { margin-bottom:0; }
+.info-icon { flex-shrink:0; width:18px; text-align:center; }
+.info-label { color:var(--gray-text); font-weight:600; min-width:76px; flex-shrink:0; font-size:12px; }
+.info-val { font-weight:700; color:var(--dark); flex:1; }
+
+.update-section { padding:14px 16px; background:#fafafa; }
+.update-title { font-size:11px; font-weight:800; color:var(--orange); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; }
+.status-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:10px; }
+.status-opt { border:1.5px solid var(--gray-border); border-radius:10px; padding:8px 4px; text-align:center; cursor:pointer; transition:all 0.15s; font-family:'Nunito',sans-serif; }
+.status-opt-icon { font-size:16px; display:block; margin-bottom:2px; }
+.status-opt-name { font-size:10px; font-weight:800; color:#555; display:block; }
+.status-opt.selected { border-width:2px; }
+.note-input { width:100%; background:white; border:1.5px solid var(--gray-border); border-radius:var(--radius-sm); padding:10px 12px; font-family:'Nunito',sans-serif; font-size:13px; font-weight:600; color:var(--dark); outline:none; margin-bottom:10px; resize:none; height:72px; }
+.note-input:focus { border-color:var(--orange); }
+.update-btn { width:100%; background:linear-gradient(135deg,var(--orange),var(--orange-light)); color:white; border:none; border-radius:var(--radius-sm); padding:13px; font-family:'Nunito',sans-serif; font-size:14px; font-weight:800; cursor:pointer; }
+.update-btn:disabled { opacity:0.6; cursor:not-allowed; }
+
+.loading-state { text-align:center; padding:48px 24px; }
+.spinner { width:36px; height:36px; border:3px solid var(--orange-border); border-top-color:var(--orange); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
+@keyframes spin { to{transform:rotate(360deg);} }
+.loading-text { font-size:13px; color:var(--gray-text); font-weight:600; }
+.empty-state { text-align:center; padding:40px 24px; }
+.empty-icon { font-size:48px; margin-bottom:12px; }
+.empty-title { font-size:16px; font-weight:900; margin-bottom:6px; }
+.empty-desc { font-size:12px; color:var(--gray-text); font-weight:600; }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#1a2a1a; color:white; padding:12px 22px; border-radius:100px; font-size:13px; font-weight:700; opacity:0; transition:all 0.3s; z-index:999; pointer-events:none; max-width:90vw; text-align:center; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.refresh-btn { position:fixed; bottom:24px; right:20px; width:48px; height:48px; background:var(--orange); border:none; border-radius:50%; color:white; font-size:20px; cursor:pointer; box-shadow:0 4px 16px rgba(255,107,0,0.4); z-index:50; display:flex; align-items:center; justify-content:center; }
+</style>
+</head>
+<body>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-icon">🔐</div>
+    <div class="auth-title">Admin Kurir</div>
+    <div class="auth-sub">Masukkan password untuk akses dashboard</div>
+    <div class="auth-err" id="authErr">Password salah!</div>
+    <input type="password" class="auth-input" id="passInput" placeholder="Password admin..." autocomplete="off">
+    <button class="auth-btn" onclick="doLogin()">Masuk →</button>
+  </div>
+</div>
+
+<div class="main-screen" id="mainScreen">
+  <div class="header">
+    <div class="header-row">
+      <div>
+        <div class="header-title">📦 Admin Kurir</div>
+        <div class="header-sub">Andalan — Kelola Pengiriman</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Keluar</button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="st-total">-</div><div class="stat-label">Total</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--orange)" id="st-proses">-</div><div class="stat-label">Aktif</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)" id="st-selesai">-</div><div class="stat-label">Selesai</div></div>
+  </div>
+
+  <div class="filter-scroll">
+    <button class="filter-btn active" onclick="setFilter('semua')">📋 Semua</button>
+    <button class="filter-btn" onclick="setFilter('menunggu')">⏳ Menunggu</button>
+    <button class="filter-btn" onclick="setFilter('dikonfirmasi')">✅ Dikonfirmasi</button>
+    <button class="filter-btn" onclick="setFilter('dijemput')">📌 Dijemput</button>
+    <button class="filter-btn" onclick="setFilter('dikirim')">🛵 Dikirim</button>
+    <button class="filter-btn" onclick="setFilter('selesai')">🎉 Selesai</button>
+    <button class="filter-btn" onclick="setFilter('dibatalkan')">❌ Dibatalkan</button>
+  </div>
+
+  <div class="orders-wrap" id="ordersWrap">
+    <div class="loading-state"><div class="spinner"></div><div class="loading-text">Memuat pesanan...</div></div>
+  </div>
+</div>
+
+<button class="refresh-btn" id="refreshBtn" style="display:none;" onclick="loadOrders()">↻</button>
+<div class="toast" id="toast"></div>
+
+<script>
+var SUPABASE_URL  = 'https://qacvdyuqkhfrwqvntxpj.supabase.co';
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhY3ZkeXVxa2hmcndxdm50eHBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTc4NTAsImV4cCI6MjA5NTU3Mzg1MH0.vmGn3bYDyCxVhb9g0C9E7nlpSlW1jLsEzY2pdKbXGBY';
+var TG_TOKEN   = 'GANTI_TOKEN_BARU_KAMU';
+var TG_CHAT_ID = '-1003765089643';
+var ADMIN_PASS = 'andalan2025'; // Ganti password ini!
+
+var currentFilter='semua', allOrders=[];
+
+var statusConfig = {
+  menunggu:     { label:'Menunggu',     emoji:'⏳', color:'#ffc800', bg:'#fffbea' },
+  dikonfirmasi: { label:'Dikonfirmasi', emoji:'✅', color:'#1976d2', bg:'#e3f2fd' },
+  dijemput:     { label:'Dijemput',     emoji:'📌', color:'#ff6b00', bg:'#fff3e8' },
+  dikirim:      { label:'Dikirim',      emoji:'🛵', color:'#9c27b0', bg:'#f3e5f5' },
+  selesai:      { label:'Selesai',      emoji:'🎉', color:'#19b62f', bg:'#e8fbe8' },
+  dibatalkan:   { label:'Dibatalkan',   emoji:'❌', color:'#e53935', bg:'#ffeaea' }
+};
+
+// ── AUTH ──
+function doLogin(){
+  if (document.getElementById('passInput').value===ADMIN_PASS){
+    sessionStorage.setItem('admin_kurir_auth','1');
+    document.getElementById('authScreen').style.display='none';
+    document.getElementById('mainScreen').style.display='block';
+    document.getElementById('refreshBtn').style.display='flex';
+    loadOrders();
+  } else {
+    document.getElementById('authErr').style.display='block';
+    document.getElementById('passInput').value='';
+  }
+}
+document.getElementById('passInput').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+function doLogout(){
+  sessionStorage.removeItem('admin_kurir_auth');
+  document.getElementById('mainScreen').style.display='none';
+  document.getElementById('authScreen').style.display='flex';
+  document.getElementById('refreshBtn').style.display='none';
+}
+if (sessionStorage.getItem('admin_kurir_auth')==='1'){
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('mainScreen').style.display='block';
+  document.getElementById('refreshBtn').style.display='flex';
+}
+
+// ── FILTER ──
+function setFilter(f){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(function(b,i){
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(f)||(f==='semua'&&i===0));
+  });
+  renderOrders();
+}
+
+// ── LOAD ──
+function loadOrders(){
+  var wrap=document.getElementById('ordersWrap');
+  wrap.innerHTML='<div class="loading-state"><div class="spinner"></div><div class="loading-text">Memuat pesanan...</div></div>';
+  fetch(SUPABASE_URL+'/rest/v1/pesanan_kurir?order=created_at.desc&limit=100',{
+    headers:{'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON}
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    allOrders=data||[];
+    updateStats();
+    renderOrders();
+  })
+  .catch(function(){
+    wrap.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Gagal Memuat</div></div>';
+  });
+}
+
+function updateStats(){
+  var aktif=['menunggu','dikonfirmasi','dijemput','dikirim'];
+  document.getElementById('st-total').textContent=allOrders.length;
+  document.getElementById('st-proses').textContent=allOrders.filter(function(o){ return aktif.includes(o.status); }).length;
+  document.getElementById('st-selesai').textContent=allOrders.filter(function(o){ return o.status==='selesai'; }).length;
+}
+
+function renderOrders(){
+  var filtered=currentFilter==='semua'?allOrders:allOrders.filter(function(o){ return o.status===currentFilter; });
+  var wrap=document.getElementById('ordersWrap');
+  if (!filtered.length){
+    wrap.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Tidak Ada Pesanan</div><div class="empty-desc">Tidak ada pesanan dengan status ini.</div></div>';
+    return;
+  }
+  wrap.innerHTML='';
+  filtered.forEach(function(order,i){ wrap.appendChild(buildCard(order,i)); });
+}
+
+function buildCard(order, idx){
+  var cfg=statusConfig[order.status]||statusConfig.menunggu;
+  var tgl=order.created_at?new Date(order.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'-';
+  var div=document.createElement('div');
+  div.className='order-card'; div.style.animationDelay=(idx*0.04)+'s'; div.dataset.id=order.id;
+
+  var statusOpts='';
+  Object.keys(statusConfig).forEach(function(s){
+    var sc=statusConfig[s], sel=order.status===s?'selected':'';
+    statusOpts+=
+      '<div class="status-opt '+sel+'" data-status="'+s+'" '+
+        'style="'+(sel?'border-color:'+sc.color+';background:'+sc.bg:'')+'">'+
+        '<span class="status-opt-icon">'+sc.emoji+'</span>'+
+        '<span class="status-opt-name">'+sc.label+'</span>'+
+      '</div>';
+  });
+
+  div.innerHTML=
+    '<div class="order-head">'+
+      '<div class="order-dot" style="background:'+cfg.color+'"></div>'+
+      '<div class="order-info">'+
+        '<div class="order-kode">'+cfg.emoji+' '+order.kode_pesanan+'</div>'+
+        '<div class="order-meta">'+order.nama+' · '+tgl+'</div>'+
+      '</div>'+
+      '<div class="order-badge" style="background:'+cfg.bg+';color:'+cfg.color+'">'+cfg.label+'</div>'+
+      '<div class="order-chevron">›</div>'+
+    '</div>'+
+    '<div class="order-body">'+
+      '<div class="order-section">'+
+        '<div class="info-row"><div class="info-icon">👤</div><div class="info-label">Pengirim</div><div class="info-val">'+order.nama+'</div></div>'+
+        '<div class="info-row"><div class="info-icon">📱</div><div class="info-label">No. HP</div><div class="info-val">'+order.hp+'</div></div>'+
+        '<div class="info-row"><div class="info-icon">📦</div><div class="info-label">Paket</div><div class="info-val">'+order.jenis_paket+' · '+order.ukuran_paket+'</div></div>'+
+        '<div class="info-row"><div class="info-icon">📝</div><div class="info-label">Isi</div><div class="info-val" style="white-space:pre-wrap">'+order.deskripsi+'</div></div>'+
+      '</div>'+
+      '<div class="order-section">'+
+        '<div class="info-row"><div class="info-icon">📌</div><div class="info-label">Jemput</div><div class="info-val">'+order.asal_label+'</div></div>'+
+        (order.detail_asal?'<div class="info-row"><div class="info-icon">🏠</div><div class="info-label">Detail</div><div class="info-val">'+order.detail_asal+'</div></div>':'')+
+        '<div class="info-row"><div class="info-icon">📍</div><div class="info-label">Tujuan</div><div class="info-val">'+order.tujuan_label+'</div></div>'+
+        (order.detail_tujuan?'<div class="info-row"><div class="info-icon">🏠</div><div class="info-label">Detail</div><div class="info-val">'+order.detail_tujuan+'</div></div>':'')+
+        (order.nama_penerima?'<div class="info-row"><div class="info-icon">👤</div><div class="info-label">Penerima</div><div class="info-val">'+order.nama_penerima+(order.hp_penerima?' · '+order.hp_penerima:'')+'</div></div>':'')+
+        (order.waktu_jemput?'<div class="info-row"><div class="info-icon">⏰</div><div class="info-label">Waktu</div><div class="info-val">'+order.waktu_jemput+'</div></div>':'')+
+        (order.catatan?'<div class="info-row"><div class="info-icon">📋</div><div class="info-label">Catatan</div><div class="info-val">'+order.catatan+'</div></div>':'')+
+      '</div>'+
+      '<div class="order-section">'+
+        '<div class="info-row"><div class="info-icon">📏</div><div class="info-label">Jarak</div><div class="info-val">'+Number(order.jarak_km||0).toFixed(1)+' km</div></div>'+
+        '<div class="info-row"><div class="info-icon">🛵</div><div class="info-label">Ongkir</div><div class="info-val">Rp '+fmtRp(order.ongkir||0)+'</div></div>'+
+        '<div class="info-row"><div class="info-icon">📦</div><div class="info-label">Biaya Ukuran</div><div class="info-val">'+(order.biaya_ukuran>0?'Rp '+fmtRp(order.biaya_ukuran):'Gratis')+'</div></div>'+
+        '<div class="info-row"><div class="info-icon">💰</div><div class="info-label">Total Est.</div><div class="info-val" style="color:var(--orange);font-size:14px;">Rp '+fmtRp(order.total_est||0)+'</div></div>'+
+        '<div class="info-row"><div class="info-icon">💳</div><div class="info-label">Bayar</div><div class="info-val">'+order.metode_bayar+'</div></div>'+
+      '</div>'+
+      '<div class="update-section">'+
+        '<div class="update-title">🔄 Update Status</div>'+
+        '<div class="status-grid">'+statusOpts+'</div>'+
+        '<textarea class="note-input" placeholder="Catatan untuk pemesan (opsional)...">'+(order.catatan_admin||'')+'</textarea>'+
+        '<button class="update-btn" onclick="updateStatus(\''+order.id+'\', this)">Simpan Perubahan</button>'+
+      '</div>'+
+    '</div>';
+
+  div.querySelector('.order-head').addEventListener('click', function(){
+    var body=div.querySelector('.order-body'), chev=div.querySelector('.order-chevron');
+    var isOpen=body.classList.contains('open');
+    document.querySelectorAll('.order-body.open').forEach(function(b){ b.classList.remove('open'); });
+    document.querySelectorAll('.order-chevron.open').forEach(function(c){ c.classList.remove('open'); });
+    if (!isOpen){ body.classList.add('open'); chev.classList.add('open'); }
+  });
+
+  div.querySelectorAll('.status-opt').forEach(function(opt){
+    opt.addEventListener('click', function(){
+      div.querySelectorAll('.status-opt').forEach(function(o){ o.classList.remove('selected'); o.style.borderColor=''; o.style.background=''; });
+      var s=opt.dataset.status, sc=statusConfig[s];
+      opt.classList.add('selected'); opt.style.borderColor=sc.color; opt.style.background=sc.bg;
+    });
+  });
+
+  return div;
+}
+
+function updateStatus(orderId, btn){
+  var card=btn.closest('.order-card');
+  var selected=card.querySelector('.status-opt.selected');
+  if (!selected){ showToast('Pilih status terlebih dahulu'); return; }
+  var newStatus=selected.dataset.status;
+  var catatan=card.querySelector('.note-input').value.trim();
+  var order=allOrders.find(function(o){ return o.id===orderId; });
+  if (!order) return;
+
+  btn.disabled=true; btn.textContent='⏳ Menyimpan...';
+
+  fetch(SUPABASE_URL+'/rest/v1/pesanan_kurir?id=eq.'+orderId,{
+    method:'PATCH',
+    headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON,'Prefer':'return=representation'},
+    body:JSON.stringify({status:newStatus, catatan_admin:catatan||null})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(){
+    order.status=newStatus; order.catatan_admin=catatan||null;
+    updateStats();
+    var cfg=statusConfig[newStatus]||statusConfig.menunggu;
+    var tgMsg=
+      cfg.emoji+' <b>UPDATE KURIR</b>\n'+
+      '━━━━━━━━━━━━━━━━\n'+
+      '🔖 Kode : <b>'+order.kode_pesanan+'</b>\n'+
+      '👤 Nama : '+order.nama+'\n'+
+      '📱 HP   : <code>'+order.hp+'</code>\n'+
+      '━━━━━━━━━━━━━━━━\n'+
+      '⚡ Status: <b>'+cfg.label.toUpperCase()+'</b>\n'+
+      (catatan?'💬 Catatan: '+catatan:'');
+    fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:TG_CHAT_ID, text:tgMsg, parse_mode:'HTML'})
+    }).catch(function(){});
+    showToast('✅ Status berhasil diupdate!');
+    btn.disabled=false; btn.textContent='Simpan Perubahan';
+    setTimeout(loadOrders, 600);
+  })
+  .catch(function(){
+    showToast('❌ Gagal update. Coba lagi.');
+    btn.disabled=false; btn.textContent='Simpan Perubahan';
+  });
+}
+
+setInterval(function(){ if(sessionStorage.getItem('admin_kurir_auth')==='1') loadOrders(); }, 60000);
+if (sessionStorage.getItem('admin_kurir_auth')==='1') loadOrders();
+
+var toastTimer;
+function showToast(msg){ var el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove('show'); },2500); }
+function fmtRp(n){ return Number(n).toLocaleString('id-ID'); }
+</script>
+</body>
+</html>
